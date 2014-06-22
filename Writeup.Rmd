@@ -1,0 +1,65 @@
+---
+title: "Machine Learning -- Human Activity Recognition Dataset"
+output: html_document
+---
+
+A machine learning algorithm to classify accelerometer data from weight lifters into one of five exercise types, or classes. The boosting algorithm was used on the dataset -- specifically a Generalized Boosted Regression Model, or GBM. This report addresses two themes: 
+
+1) How and why this model was specified
+2) Estimation of the out-of-sample error rate (using cross-validation)
+
+### Covariate Selection
+
+The original training dataset contained 160 variables, many of which were not appropriate for classification solution. First, identifying variables (e.g. username, timestamps, etc) were removed. Second, all variables that did not include enough variance (and thereby, provided no predictive power) were also removed. These included variables with a high proportion of missing values and those that contained all zero values. The process for removing those variables is shown below:
+
+
+```{r loaddata, echo = FALSE}
+
+setwd("C:/Users/SLAM/Desktop/Johns Hopkins/Practical Machine Learning/")
+training <- read.csv("pml-training.csv")
+testing <- read.csv("pml-testing.csv")
+library(caret)
+library(gbm)
+library(plyr)
+
+```
+
+```{r cleanse}
+
+
+newtrain <- training[,!is.na(training[1,])]
+drops <- c("X", "user_name", "raw_timestamp_part_1", "raw_timestamp_part_2", "cvtd_timestamp", "new_window", "kurtosis_yaw_belt", "skewness_yaw_belt", "amplitude_yaw_belt", "kurtosis_yaw_dumbbell", "skewness_yaw_dumbbell", "kurtosis_yaw_forearm", "skewness_yaw_forearm", "amplitude_yaw_forearm")
+newtrain <- newtrain[,!(colnames(newtrain) %in% drops)]
+drops2 <- c("kurtosis_picth_belt", "skewness_roll_belt.1", "kurtosis_roll_arm", "kurtosis_picth_arm", "skewness_roll_arm", "skewness_pitch_arm", "kurtosis_yaw_arm", "skewness_yaw_arm", "kurtosis_roll_forearm", "kurtosis_picth_forearm", "skewness_roll_forearm", "skewness_pitch_forearm", "max_yaw_forearm", "min_yaw_forearm")
+newtrain <- newtrain[,!(colnames(newtrain) %in% drops2)]
+drops3 <- c("kurtosis_roll_belt", "skewness_roll_belt", "max_yaw_belt", "min_yaw_belt", "kurtosis_roll_dumbbell", "kurtosis_picth_dumbbell", "skewness_roll_dumbbell", "skewness_pitch_dumbbell", "num_window", "max_yaw_dumbbell", "min_yaw_dumbbell", "amplitude_yaw_dumbbell")
+newtrain <- newtrain[,!(colnames(newtrain) %in% drops3)]
+```
+The transformation process above was then repeated for the testing dataset.
+
+### Model Specification
+
+With the covariates now selected, the model itself was then specified. The GBM boosting algorithm was selected because of its high predictive performance in previous applications. 4-fold cross-validation was used to reduce the bias of the resulting output. The code for the model is shown below:
+
+```{r algorithm}
+set.seed(7634)
+# Preloads CV options. Allows parallel processing for faster performance.
+fitControl <- trainControl(method = "cv",number = 10, allowParallel=T)
+# Runs the boosting ML algorithm on the training dataset 
+test <- train(classe ~., method = "gbm", data = newtrain, trControl = fitControl, verbose = FALSE)
+test
+```
+
+### Out of Sample Error Rate (Using Cross-Validation)
+
+Note that since the CV method was called in the train() function earlier, there is no need to explicitly split the dataset into K-folds, to calculate the out-of-sample error rate. The folds are split automatically by R, and OOS accuracy is already used to optimize the function. 
+
+Here is the code for extracting the cross-validation out of sample error rate.  The accuracy for each of the 4 folds was calculated against the datapoints not present in that fold. Since the folds are equally sized, an average of these four accuracy measures presents an estimate of the model's overall out-of-sample error rate: 96%
+
+```{r error}
+
+test$resample
+mean(test$resample$Accuracy)
+
+```
+
