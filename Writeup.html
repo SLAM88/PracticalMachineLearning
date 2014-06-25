@@ -126,7 +126,7 @@ test</code></pre>
 <div id="out-of-sample-error-rate-using-cross-validation" class="section level3">
 <h3>Out of Sample Error Rate (Using Cross-Validation)</h3>
 <p>Note that since the CV method was called in the train() function earlier, there is no need to explicitly split the dataset into K-folds, to calculate the out-of-sample error rate. The folds are split automatically by R, and OOS accuracy is already used to optimize the function.</p>
-<p>Here is the code for extracting the cross-validation out of sample error rate. The accuracy for each of the 4 folds was calculated against the datapoints not present in that fold. Since the folds are equally sized, an average of these four accuracy measures presents an estimate of the model’s overall out-of-sample error rate: 96%</p>
+<p>Here is the code for extracting the cross-validation out of sample error rate. The accuracy for each of the 4 folds was calculated against the datapoints not present in that fold. Since the folds are equally sized, an average of these four accuracy measures presents an estimate of the model’s overall out-of-sample error rate: 4% (1 - 96% accuracy)</p>
 <pre class="r"><code>test$resample</code></pre>
 <pre><code>##   Accuracy  Kappa Resample
 ## 1   0.9621 0.9520    Fold3
